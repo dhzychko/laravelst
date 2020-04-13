@@ -40,11 +40,65 @@ if ( ! class_exists( 'BTBB_Light' ) ) {
 			add_action( 'admin_footer', array( $this, 'js_settings' ) );
 			add_action( 'admin_footer', array( $this, 'translate' ) );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+			add_action( 'admin_menu', array( $this, 'calculator_page' ) );
 			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 			add_action( 'init', array( $this, 'create_post_type' ) );
 
 			add_shortcode( $this->shortcode, array( $this, 'add_shortcode' ) );
+
+			add_action( 'init', array( $this, 'create_calculator_table_base' ) );
 		}
+
+
+
+		function create_calculator_table_base() {
+
+			global $wpdb;
+		
+			$charset_collate = "DEFAULT CHARACTER SET {$wpdb->charset} COLLATE {$wpdb->collate}";
+		
+			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		
+			$table_name = $wpdb->prefix . 'calculcator_base';
+		
+			$sql1 = "CREATE TABLE $table_name (
+			`id` int(11) NOT NULL,
+			`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			`payment_id` int(12) DEFAULT NULL,
+			`form_summ` float DEFAULT NULL,
+			`quote_line` text,
+			`destination_city` varchar(220) DEFAULT NULL,
+			`total_quote` int(225) DEFAULT NULL,
+			`calculator_insurance` varchar(220) DEFAULT NULL,
+			`name_form_email_me` varchar(50) DEFAULT NULL,
+			`email_form_email_me` varchar(220) DEFAULT NULL,
+			`phone_form_email_me` int(30) DEFAULT NULL,
+			`address_form_email_me` varchar(220) DEFAULT NULL,
+			`message_form_email_me` text,
+			`date_collection` varchar(50) DEFAULT NULL,
+			`name_collection` varchar(50) DEFAULT NULL,
+			`email_collection` varchar(225) DEFAULT NULL,
+			`phone_collection` int(30) DEFAULT NULL,
+			`address_1_collection` varchar(220) DEFAULT NULL,
+			`address_2_collection` varchar(220) DEFAULT NULL,
+			`city_collection` varchar(50) DEFAULT NULL,
+			`postcode_collection` int(20) DEFAULT NULL,
+			`country_destination` varchar(50) DEFAULT NULL,
+			`name_destination` varchar(50) DEFAULT NULL,
+			`email_destination` varchar(220) DEFAULT NULL,
+			`phone_destination` int(30) DEFAULT NULL,
+			`address_1_destination` varchar(220) DEFAULT NULL,
+			`address_2_destination` varchar(220) DEFAULT NULL,
+			`city_destination` varchar(50) DEFAULT NULL,
+			`postcode_destination` int(20) DEFAULT NULL,
+			`message_payment` text
+			) $charset_collate;";
+			dbDelta( $sql1 );
+		}
+
+
+
+
 
 		/**
 		 * Enqueue
@@ -264,8 +318,10 @@ if ( ! class_exists( 'BTBB_Light' ) ) {
 
 			add_menu_page( $this->single_name,
 				$this->single_name,
-				'edit_posts', $this->slug,
-				array( $this, 'admin_management_page' ), $this->icon,
+				'edit_posts', 
+				$this->slug,
+				array( $this, 'admin_management_page' ), 
+				$this->icon,
 				$_wp_last_object_menu );
 
 			$edit = add_submenu_page( $this->slug,
@@ -283,7 +339,108 @@ if ( ! class_exists( 'BTBB_Light' ) ) {
 				array( $this, 'admin_edit_page' ) );
 
 		}
+
+		// Calculator page
+		function calculator_page(){    
+			$page_title = 'Table Calculator';   
+			$menu_title = 'Table Data';   
+			$capability = 'edit_posts';   
+			$menu_slug  = 'extra-post-info';   
+			$function   = array( $this, 'calculator_table_admin_board' );   
+			$icon_url   = 'dashicons-media-code';   
+			$position   = 8;
 		
+			add_menu_page( 
+				$page_title,
+				$menu_title,                   
+				$capability,                   
+				$menu_slug,                   
+				$function,                   
+				$icon_url,                   
+				$position 
+			); } 
+		
+			function calculator_table_admin_board(){
+        
+				?>
+				<table id="calculater_table_id" class="calculater_table" cellpadding="10" style="margin: 30px 0; padding: 0 15px">
+					<thead style="text-align: left; background: #0073AA; color: #fff;">
+					<tr>
+						<th>Order id</th>
+						<th>Requested collection date</th>
+						<th>Name Collection</th>
+						<th>Email Collection</th>
+						<th>Phone Collection</th>
+						<th>Address Collection</th>
+						<th>City Collection</th>
+						<th>Postcode Collection</th>
+						<th>Country Destination</th>
+						<th>Name Destination</th>
+						<th>Email Destination</th>
+						<th>Phone Destination</th>
+						<th>Address Destination</th>
+						<th>City Destination</th>
+						<th>Postcode Destination</th>
+						<th>Insurance</th>						
+						<th>Total items</th>
+						<th>Total sum</th>
+						<th style="width:10%;">Items</th>
+					</tr>
+					</thead>
+					<tbody>
+						<?php
+						global $wpdb;
+						$results = $wpdb->get_results ( "SELECT * FROM rmje_calculcator_base ORDER BY created_at DESC" );
+						//  echo '<pre>' . print_r($results, true) . '</pre>';
+						// var_dump($results);
+						foreach ($results as $result) {
+							?>						
+								<tr>
+									<td ><?php echo $result->payment_id ?></td>
+									<td><?php echo $result->date_collection ?></td>
+									<td><?php echo $result->name_collection ?></td>
+									<td><?php echo $result->email_collection ?></td>
+									<td><?php echo $result->phone_collection ?></td>
+									<td><?php echo $result->address_1_collection . ' ' . $result->address_2_collection ?></td>
+									<td><?php echo $result->city_collection ?></td>
+									<td><?php echo $result->postcode_collection ?></td>
+									<td><?php echo $result->country_destination ?></td>
+									<td><?php echo $result->name_destination ?></td>
+									<td><?php echo $result->email_destination ?></td>
+									<td><?php echo $result->phone_destination ?></td>
+									<td><?php echo $result->address_1_destination . ' ' . $result->address_2_destination ?></td>
+									<td><?php echo $result->city_destination ?></td>
+									<td><?php echo $result->postcode_destination ?></td>
+									<td style="min-width:200px;"><?php echo $result->calculator_insurance ?></td>
+									<td><?php echo $result->total_quote ?></td>
+									<td><?php echo $result->form_summ ?></td>
+									<td style="min-width:300px;"><?php $qaaz = json_decode($result->quote_line, true); 
+
+									 	foreach ($qaaz as $item) {
+											 if ($item[value] != 0) {
+												echo $item[name] . ' - ';
+												echo $item[value] . '</br>';
+											 }
+										 }
+
+									?></td>
+								</tr>							
+							<?php
+						}
+						?>
+					</tbody>
+				</table>
+				<style>
+					#calculater_table_id tr:nth-child(odd) td{
+						background: #fff;
+					}
+
+				</style>
+				<?php
+			}		
+		}
+
+
 		// cpt admin
 		function load_admin() {
 			$current_screen = get_current_screen();
@@ -579,7 +736,7 @@ if ( ! class_exists( 'BTBB_Light' ) ) {
 
 	}
 	
-}
+
 
 if ( ! class_exists( 'BTBB_Light_Map_Proxy' ) ) {
 
